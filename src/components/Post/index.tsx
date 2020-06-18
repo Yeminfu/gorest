@@ -13,14 +13,11 @@ class Post extends React.Component<{
     fetcher(this.props.post_id);
   }
   render() {
-    // stateData.status = "ddddd";
     const { title, body } = this.props.stateData.post;
     return (
       <>
         <h1>{title}</h1>
         <p>{body}</p>
-        {/* {stateData.status} */}
-        {/* <pre>{JSON.stringify({ stateData }, null, " ")}</pre> */}
       </>
     );
   }
