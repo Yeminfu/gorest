@@ -1,6 +1,18 @@
 import React from "react";
 import { Button, Space } from "antd";
-import { Link } from "react-router-dom";
+import { Link, withRouter } from "react-router-dom";
+
+const RouteButton = withRouter(({ history, path, disabled }: any) => (
+  <>
+    <Button
+      type="primary"
+      disabled={disabled}
+      onClick={() => history.push(path)}
+    >
+      Показать
+    </Button>
+  </>
+));
 
 export const columns = [
   {
@@ -23,9 +35,16 @@ export const columns = [
     key: "action",
     render: (text: any, record: any) => (
       <Space size="middle">
-        <Button type="primary">
+        <RouteButton
+          path={`/users/posts/${record.id}`}
+          disabled={!record.isSelected}
+        >
+          Показать
+        </RouteButton>
+
+        {/* <Button type="primary">
           <Link to={`/users/posts/${record.id}`}>Перейти к постам</Link>
-        </Button>
+        </Button> */}
       </Space>
     ),
   },

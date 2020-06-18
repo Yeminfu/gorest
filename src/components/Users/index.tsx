@@ -1,74 +1,81 @@
 import React, { useEffect } from "react";
 import { observer } from "mobx-react";
 import { Button, Table } from "antd";
-import AppState from "./state";
+import { stateData } from "./state";
 import { columns } from "./columns";
+import { hookWrapper } from "./hooksWrapper";
+import { fetcher } from "./fetcher";
 
-interface stateType {
-  appState: {
-    state: string;
-    fetchProjects: any;
-    users: Array<{}>;
-    meta: any;
+interface propsType {
+  user_id: string | number;
+  stateData: {
+    users: Array<{
+      id: number;
+    }>;
+    status: any;
+    meta: { totalCount: number; currentPage: number };
   };
 }
 
-const UsersView = observer(({ appState }: stateType) => {
-  useEffect(() => {
-    appState.fetchProjects(1);
-  }, []);
-
-  const data = appState.users.map((x: any) => ({ ...x, key: x.id }));
-
-  const rowSelection = {
-    onChange: (selectedRowKeys: any, selectedRows: any) => {},
-    getCheckboxProps: (record: any) => ({}),
-  };
-
-  if (appState.state === "error") {
-    return <>ooops o_O</>;
-  } else {
-    return (
-      <>
-        <Table
-          rowSelection={{
-            type: "checkbox",
-            ...rowSelection,
-          }}
-          columns={columns}
-          dataSource={data}
-          pagination={{
-            pageSize: 20,
-            current: 1,
-            total: appState.meta.totalCount,
-            position: ["topLeft", "bottomLeft"],
-          }}
-          onChange={(p) => {
-            const { current } = p;
-            appState.fetchProjects(current);
-            window.scrollTo({
-              top: 0,
-              behavior: "smooth",
-            });
-          }}
-          loading={appState.state === "pending"}
-        />
-        <Button type="primary" onClick={appState.fetchProjects}>
-          Fetch
-        </Button>
-      </>
-    );
+@observer
+class UsersView extends React.Component<propsType> {
+  componentDidMount() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initPage = urlParams.get("page");
+    fetcher(initPage ? initPage : 1);
   }
-});
-
-class Users extends React.Component {
+  onSelectChange(selected: any) {
+    const statePosts = stateData.users;
+    stateData.users = statePosts.map((item) => ({
+      ...item,
+      isSelected: selected.includes(item.id),
+    }));
+  }
   render() {
-    return (
-      <div>
-        <UsersView appState={new AppState()} />
-      </div>
-    );
+    const data = this.props.stateData.users.map((x: any) => ({
+      ...x,
+      key: x.id,
+    }));
+    // const rowSelection = {
+    //   onChange: (selectedRowKeys: any, selectedRows: any) => {},
+    //   getCheckboxProps: (record: any) => ({}),
+    // };
+    const rowSelection: any = {
+      // selectedRowKeys,
+      type: "checkbox",
+      onChange: this.onSelectChange,
+    };
+    if (stateData.status === "error") {
+      return <>ooops o_O</>;
+    } else {
+      return (
+        <>
+          <Table
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={data}
+            pagination={{
+              pageSize: 20,
+              current: this.props.stateData.meta.currentPage,
+              total: this.props.stateData.meta.totalCount,
+              position: ["topLeft", "bottomLeft"],
+            }}
+            onChange={(p: any) => {
+              const { current } = p;
+              fetcher(current);
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+            }}
+            loading={this.props.stateData.status === "pending"}
+          />
+        </>
+      );
+    }
   }
 }
 
-export default Users;
+export default hookWrapper((props: any) => (
+  <UsersView {...props} stateData={stateData} />
+));
