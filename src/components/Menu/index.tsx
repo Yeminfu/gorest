@@ -1,13 +1,14 @@
 import React from "react";
-import { MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
 import { Link } from "react-router-dom";
-
+import userIcon from "./icons/user.svg";
+import { Icon } from "./icon";
 class MenuComponent extends React.Component {
   items = [
     {
       path: "/",
-      label: "/main",
+      label: "main",
+      icon: userIcon,
     },
   ];
   state = {
@@ -28,9 +29,11 @@ class MenuComponent extends React.Component {
           selectedKeys={[this.state.current]}
           mode="horizontal"
         >
-          <Menu.Item key="mail" icon={<MailOutlined />}>
-            <Link to="/users">Users</Link>
-          </Menu.Item>
+          {this.items.map((item, i) => (
+            <Menu.Item key={i} icon={<Icon src={item.icon} alt="user" />}>
+              <Link to={item.path}>{item.label}</Link>
+            </Menu.Item>
+          ))}
         </Menu>
       </div>
     );
