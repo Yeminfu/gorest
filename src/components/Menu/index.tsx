@@ -6,7 +6,7 @@ import { Icon } from "./icon";
 class MenuComponent extends React.Component {
   items = [
     {
-      path: "/",
+      path: "/users",
       label: "main",
       icon: userIcon,
     },
