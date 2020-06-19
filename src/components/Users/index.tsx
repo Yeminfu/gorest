@@ -1,81 +1,58 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { observer } from "mobx-react";
-import { Button, Table } from "antd";
-import { stateData } from "./state";
+import { Table } from "antd";
+import store from "./store";
 import { columns } from "./columns";
 import { hookWrapper } from "./hooksWrapper";
-import { fetcher } from "./fetcher";
-
-interface propsType {
-  user_id: string | number;
-  stateData: {
-    users: Array<{
-      id: number;
-    }>;
-    status: any;
-    meta: { totalCount: number; currentPage: number };
-  };
-}
+import { propsType } from "./types";
 
 @observer
 class UsersView extends React.Component<propsType> {
   componentDidMount() {
     const urlParams = new URLSearchParams(window.location.search);
     const initPage = urlParams.get("page");
-    fetcher(initPage ? initPage : 1);
+    this.props.store.fetcher(initPage ? initPage : 1);
   }
-  onSelectChange(selected: any) {
-    const statePosts = stateData.users;
-    stateData.users = statePosts.map((item) => ({
+  onSelectChange(selected: number[]) {
+    const updatedUsers = this.props.store.users.map((item) => ({
       ...item,
       isSelected: selected.includes(item.id),
     }));
+    this.props.store.setUsersForce(updatedUsers);
+  }
+  onPageChange({ current }: any) {
+    this.props.store.fetcher(current);
   }
   render() {
-    const data = this.props.stateData.users.map((x: any) => ({
-      ...x,
-      key: x.id,
-    }));
-    // const rowSelection = {
-    //   onChange: (selectedRowKeys: any, selectedRows: any) => {},
-    //   getCheckboxProps: (record: any) => ({}),
-    // };
     const rowSelection: any = {
-      // selectedRowKeys,
       type: "checkbox",
-      onChange: this.onSelectChange,
+      onChange: this.onSelectChange.bind(this),
     };
-    if (stateData.status === "error") {
+    const pagination: any = {
+      pageSize: 20,
+      position: ["topLeft", "bottomLeft"],
+      current: this.props.store.meta.currentPage,
+      total: this.props.store.meta.totalCount,
+    };
+    const { store } = this.props;
+
+    if (store.status === "error") {
       return <>ooops o_O</>;
     } else {
       return (
-        <>
-          <Table
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={data}
-            pagination={{
-              pageSize: 20,
-              current: this.props.stateData.meta.currentPage,
-              total: this.props.stateData.meta.totalCount,
-              position: ["topLeft", "bottomLeft"],
-            }}
-            onChange={(p: any) => {
-              const { current } = p;
-              fetcher(current);
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
-            }}
-            loading={this.props.stateData.status === "pending"}
-          />
-        </>
+        <Table
+          rowSelection={rowSelection}
+          columns={columns}
+          dataSource={store.users}
+          pagination={pagination}
+          onChange={this.onPageChange.bind(this)}
+          loading={store.status === "pending"}
+        />
       );
     }
   }
 }
 
 export default hookWrapper((props: any) => (
-  <UsersView {...props} stateData={stateData} />
+  <UsersView {...props} store={new store()} />
 ));
