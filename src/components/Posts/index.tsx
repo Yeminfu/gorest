@@ -3,75 +3,56 @@ import { hookWrapper } from "./hooksWrapper";
 import { observer } from "mobx-react";
 import { Table } from "antd";
 import { columns } from "./columns";
-import { stateData } from "./state";
-import { fetcher } from "./fetcher";
-
-interface propsType {
-  user_id: string | number;
-  stateData: {
-    posts: Array<{
-      id: number;
-    }>;
-    status: any;
-    meta: any;
-  };
-}
+import store from "./store";
+import { propsType } from "./types";
 
 @observer
 class Posts extends React.Component<propsType> {
   componentDidMount() {
     const urlParams = new URLSearchParams(window.location.search);
     const initPage = urlParams.get("page");
-    fetcher(initPage ? initPage : 1, this.props.user_id);
+    this.props.store.fetcher(initPage ? initPage : 1, this.props.user_id);
   }
-
-  onSelectChange(selected: any) {
-    const statePosts = stateData.posts;
-    stateData.posts = statePosts.map((item) => ({
+  onSelectChange(selected: number[]) {
+    const updatedPosts = this.props.store.posts.map((item) => ({
       ...item,
       isSelected: selected.includes(item.id),
     }));
+    this.props.store.setUsersForce(updatedPosts);
   }
-
-  onChangePage(p: any) {
-    const { current } = p;
-    fetcher(current, this.props.user_id);
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  onPageChange({ current }: any) {
+    this.props.store.fetcher(current, this.props.user_id);
   }
 
   render() {
-    const { user_id, stateData } = this.props;
-    const { status } = stateData;
     const rowSelection: any = {
-      // selectedRowKeys,
       type: "checkbox",
-      onChange: this.onSelectChange,
+      onChange: this.onSelectChange.bind(this),
     };
-    if (status === "error") {
-      return <>Ooops O_o</>;
+    const pagination: any = {
+      pageSize: 20,
+      position: ["topLeft", "bottomLeft"],
+      current: this.props.store.meta.currentPage,
+      total: this.props.store.meta.totalCount,
+    };
+    const { store } = this.props;
+
+    if (store.status === "error") {
+      return <>ooops o_O</>;
     } else {
       return (
         <Table
           rowSelection={rowSelection}
           columns={columns}
-          dataSource={stateData.posts.map((x) => ({ ...x, key: x.id }))}
-          pagination={{
-            pageSize: 20,
-            current: stateData.meta.currentPage,
-            total: stateData.meta.totalCount,
-            position: ["topLeft", "bottomLeft"],
-          }}
-          onChange={this.onChangePage}
-          loading={stateData.status === "pending"}
+          dataSource={store.posts}
+          pagination={pagination}
+          onChange={this.onPageChange.bind(this)}
+          loading={store.status === "pending"}
         />
       );
     }
   }
 }
-
 export default hookWrapper((props: any) => (
-  <Posts {...props} stateData={stateData} />
+  <Posts {...props} store={new store()} />
 ));
