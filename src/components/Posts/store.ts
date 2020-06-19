@@ -7,7 +7,7 @@ class Store {
   @observable meta = {};
 
   @action.bound
-  setPostsForce(posts: userType[]) {
+  setUsersForce(posts: userType[]) {
     this.posts = posts;
   }
 

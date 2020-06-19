@@ -2,9 +2,8 @@ import axios from "axios";
 
 export const api = (post_id: string | number): Promise<any> =>
   axios
-    .get(`https://gorest.co.in/public-api/posts/2237`, {
+    .get(`https://gorest.co.in/public-api/posts/${post_id}`, {
       params: {
-        post_id,
         format: "json",
         "access-token": "1r7E8WptcK0wJduG41LaztXzHLjP_Qg692RZ",
       },
